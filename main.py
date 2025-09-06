@@ -126,14 +126,14 @@ if __name__ == '__main__':
     print("-"*30)
 
     # Test with a position
-    rook_pos = Position(1,1)
+    rook_pos = Position(1, 1)
 
     # Get a test piece
     test_piece = tab.get_piece(rook_pos)
     if test_piece:
         print(f"Testing piece: {test_piece.color} {type(test_piece).__name__} at {rook_pos}")
 
-        # 5. This is the key step: Ask the piece for its legal moves.
+        #    Ask the piece for its legal moves.
         #    We pass the 'chess_board' object so the piece knows the state of the game.
         legal_moves = test_piece.get_legal_moves(tab)
 
