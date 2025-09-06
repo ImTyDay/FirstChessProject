@@ -126,7 +126,7 @@ if __name__ == '__main__':
     print("-"*30)
 
     # Test with a position
-    rook_pos = Position(1, 1)
+    rook_pos = Position(2, 1)
 
     # Get a test piece
     test_piece = tab.get_piece(rook_pos)

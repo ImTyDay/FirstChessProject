@@ -11,6 +11,8 @@ class Piece:
     Parent class of all types of pieces, defines common attributes to all pieces.
     Also, the parent class for SlidingPiece, witch is a subclass representing all pieces that have a slide-based
     movement, based on directions: Rook, Bishop, Queen
+    Also, the parent class for OneMovePiece, that are not blocked by other pieces like SlidingPieces (Knight, King)
+    The pawn has a unique movement, so it is just a child from Piece
     """
 
     def __init__(self, color, position: Position):
@@ -23,6 +25,9 @@ class Piece:
 
         self.color = color
         self.position = position
+
+        # define a temporary attribute that is overridden by child classes, used to check legal moves
+        self.allowed_directions = []
 
     def __str__(self):
         # will be overridden by child class
@@ -41,9 +46,6 @@ class SlidingPiece(Piece):
 
     def __init__(self, color, position):
         super().__init__(color, position)
-
-        # define a temporary attribute that is overridden by child classes
-        self.allowed_directions = []
 
     def get_legal_moves(self, board: Board):
         """
@@ -87,6 +89,27 @@ class SlidingPiece(Piece):
         return legal_moves
 
 
+class OneMovePiece(Piece):
+
+    def get_legal_moves(self, board: Board):
+
+        legal_moves = []
+        allowed_directions = []
+
+        for direction in allowed_directions:
+            # there is no need to iterate, there are max 8 moves
+
+            current_position = self.position + direction
+
+            if current_position.on_board:  # don't go out of bounds
+                piece_on_square = board.get_piece(current_position)
+                # validate the move by capturing or moving to an empty space
+                if not piece_on_square or piece_on_square.color != self.color:
+                    legal_moves.append(current_position)
+
+        return legal_moves
+
+
 class Pawn(Piece):
 
     def __init__(self, color, position):
@@ -99,14 +122,26 @@ class Pawn(Piece):
         return f"{"P" if self.color == 'white' else "p"}{self.position}"
 
     def get_legal_moves(self, board: 'Board'):
-        if not self.has_moved:
+        """
+        The Pawn moving logic is unique, we need to make their own function
+
+        :param board: Board
+        :return: list
+        """
+
+        non_capture_directions = [(0, 1)]
+        if not self.has_moved:  # if it is the first move
+            non_capture_directions.append((0, 2))  # we can move 2 squares
+            # TODO: Im too tired, ill sleep now and finish it later
             pass
-        pass
 
 
-class King(Piece):
+class King(OneMovePiece):
     def __init__(self, color, position):
         super().__init__(color, position)
+
+        self.allowed_directions = [(1, 1), (1, 0), (0, 1), (-1, 0), (-1, -1), (0, -1), (-1, 1), (1, -1)]
+        # a king can move one square in every direction
 
         # has_moved is useful to determine if castle is possible
         self.has_moved = False
@@ -116,10 +151,6 @@ class King(Piece):
 
     def __str__(self):
         return f"{"K" if self.color == 'white' else "k"}{self.position}"
-
-    def get_legal_moves(self, board: Board):
-
-        pass
 
 
 class Queen(SlidingPiece):
@@ -142,28 +173,15 @@ class Bishop(SlidingPiece):
         return f"{"B" if self.color == 'white' else "b"}{self.position}"
 
 
-class Knight(Piece):
+class Knight(OneMovePiece):
     def __init__(self, color, position):
         super().__init__(color, position)
 
+        self.allowed_directions = [(2, 1), (-2, 1), (2, -1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
+        # the knight can move 2 pos in a direction if 1 pos is moved in the other direction
+
     def __str__(self):
         return f"{"N" if self.color == 'white' else "n"}{self.position}"
-
-    def get_legal_moves(self, board: Board):
-        legal_moves = []
-
-        allowed_directions = [(2, 1), (-2, 1), (2, -1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
-
-        for direction in allowed_directions:
-
-            current_position = self.position + direction
-
-            if current_position.on_board:
-                piece_on_square = board.get_piece(current_position)
-                if not piece_on_square or piece_on_square.color != self.color:
-                    legal_moves.append(current_position)
-
-        return legal_moves
 
 
 class Rook(SlidingPiece):
@@ -174,6 +192,7 @@ class Rook(SlidingPiece):
         # has_moved is useful to determine if the rook can castle
         self.has_moved = False
         self.allowed_directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        # a Rook can move in every straight direction, one direction at a time
 
     def __str__(self):
         return f"{"R" if self.color == 'white' else "r"}{self.position}"
