@@ -28,6 +28,7 @@ class Piece:
 
         # define a temporary attribute that is overridden by child classes, used to check legal moves
         self.allowed_directions = []
+        self.has_moved = False  # define a general attribute for easier registration, its used only by some pieces
 
     def __str__(self):
         # will be overridden by child class
@@ -94,9 +95,8 @@ class OneMovePiece(Piece):
     def get_legal_moves(self, board: Board):
 
         legal_moves = []
-        allowed_directions = []
 
-        for direction in allowed_directions:
+        for direction in self.allowed_directions:
             # there is no need to iterate, there are max 8 moves
 
             current_position = self.position + direction
@@ -115,9 +115,6 @@ class Pawn(Piece):
     def __init__(self, color, position):
         super().__init__(color, position)
 
-        # has_moved is useful for determining if the pawn can move 2 squares
-        self.has_moved = False
-
     def __str__(self):
         return f"{"P" if self.color == 'white' else "p"}{self.position}"
 
@@ -129,11 +126,21 @@ class Pawn(Piece):
         :return: list
         """
 
-        non_capture_directions = [(0, 1)]
+        legal_moves = []  # standardize the  output of the function
+
+        non_capture_directions = [(0, 1)]  # one square ahead
         if not self.has_moved:  # if it is the first move
             non_capture_directions.append((0, 2))  # we can move 2 squares
-            # TODO: Im too tired, ill sleep now and finish it later
-            pass
+        for direction in non_capture_directions:
+            if not board.get_piece(self.position + direction):  # if the square is empty
+                legal_moves.append(direction)  # the square must not be blocked
+        capture_directions = (1, 1), (-1, 1)   # we must have an enemy piece to go diagonally
+        for direction in capture_directions:
+            piece_on_square = board.get_piece(self.position + direction)
+            if piece_on_square and piece_on_square.color != self.color:  # enemy piece in there
+                legal_moves.append(direction)
+
+        return legal_moves
 
 
 class King(OneMovePiece):
@@ -142,9 +149,6 @@ class King(OneMovePiece):
 
         self.allowed_directions = [(1, 1), (1, 0), (0, 1), (-1, 0), (-1, -1), (0, -1), (-1, 1), (1, -1)]
         # a king can move one square in every direction
-
-        # has_moved is useful to determine if castle is possible
-        self.has_moved = False
 
         # is_exposed is useful to determine if king is in check
         self.is_exposed = False
@@ -189,8 +193,6 @@ class Rook(SlidingPiece):
     def __init__(self, color, position):
         super().__init__(color, position)
 
-        # has_moved is useful to determine if the rook can castle
-        self.has_moved = False
         self.allowed_directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         # a Rook can move in every straight direction, one direction at a time
 

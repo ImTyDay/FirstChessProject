@@ -18,7 +18,7 @@ class Board:
         """
         The method should always return a subclass of Piece, if the position is occupied.
         If it is not occupied, or if there is no Piece there for any reason, returns None.
-        This is the best way to padronize the outputs so we don't get NaN in any way.
+        This is the best way to padronize the outputs, so we don't get NaN in any way.
 
         :param position:
         :return: Piece or None
@@ -75,8 +75,32 @@ class Board:
         file_labels = [chr(ord('A') + i) for i in range(8)]
         display_grid.columns = file_labels
 
-        # Display Nan values as empty
-        return display_grid.to_string(na_rep='Empty')
+        # Make the empty squares display as 'Empty'
+        filled_grid = display_grid.fillna('Empty')
+        return filled_grid.replace('None', 'Empty').to_string()
+
+    def move_piece(self, start_pos: Position, end_pos: Position):
+        """
+        Moves the piece in the starting position to the end position on the board.
+        This method does not check if the move is legal, just performs the move by a state change.
+
+        :param start_pos:
+        :param end_pos:
+        :return: None
+        """
+
+        piece_to_move = self.get_piece(start_pos)
+
+        if piece_to_move:  # just to be sure we are moving something
+            # Update the piece Position attribute
+            piece_to_move.position = end_pos
+
+            # Update the has_moves flag, used by Pawn, Rook, King
+            piece_to_move.has_moved = True
+
+            # Update the Board grid as well
+            self.grid.loc[start_pos.ypos, start_pos.xpos] = None  # remove the piece from the original square
+            self.grid.loc[end_pos.xpos, end_pos.ypos] = piece_to_move  # move the piece into the end square
 
 
 class Square:

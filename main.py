@@ -126,12 +126,15 @@ if __name__ == '__main__':
     print("-"*30)
 
     # Test with a position
-    rook_pos = Position(2, 1)
+    test_pos = Position(2, 1)
 
     # Get a test piece
-    test_piece = tab.get_piece(rook_pos)
-    if test_piece:
-        print(f"Testing piece: {test_piece.color} {type(test_piece).__name__} at {rook_pos}")
+    test_piece = tab.get_piece(test_pos)
+
+    if not test_piece:
+        print(f"No piece found at position {test_pos}.")
+    else:
+        print(f"Testing piece: {test_piece.color} {type(test_piece).__name__} at {test_pos}")
 
         #    Ask the piece for its legal moves.
         #    We pass the 'chess_board' object so the piece knows the state of the game.
@@ -143,6 +146,8 @@ if __name__ == '__main__':
             print("Found legal moves:", legal_moves)
         else:
             print("No legal moves were found.")
-    else:
-        print(f"No piece found at position {rook_pos}.")
 
+        # We will now actually move the piece, this time we will hardcode a knight move
+        tab.move_piece(test_piece.position, legal_moves[0])  # move it to the first legal_move we find
+
+        print(tab)  # see the update
