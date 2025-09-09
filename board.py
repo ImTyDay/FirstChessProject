@@ -1,5 +1,6 @@
 import pandas as pd
 from pieces import *
+from typing import Optional
 
 
 class Board:
@@ -14,7 +15,7 @@ class Board:
         self.grid = pd.DataFrame(None, index=range(1, 9), columns=range(1, 9))
         self._setup_pieces()
 
-    def get_piece(self, position: Position):
+    def get_piece(self, position: Position) -> Optional[Piece]:
         """
         The method should always return a subclass of Piece, if the position is occupied.
         If it is not occupied, or if there is no Piece there for any reason, returns None.
