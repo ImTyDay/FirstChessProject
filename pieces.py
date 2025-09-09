@@ -118,7 +118,7 @@ class Pawn(Piece):
     def __str__(self):
         return f"{"P" if self.color == 'white' else "p"}{self.position}"
 
-    def get_legal_moves(self, board: 'Board'):
+    def get_legal_moves(self, board: 'Board') -> list:
         """
         The Pawn moving logic is unique, we need to make their own function
 
