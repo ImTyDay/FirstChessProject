@@ -54,3 +54,18 @@ class Position:
     def __repr__(self):
         file = chr(ord('A') + self.xpos - 1)
         return F"{file}{self.ypos}"
+
+    def __eq__(self, other) -> bool:
+        """
+        Defines a way to compare if 2 positions represent the same square on the board,
+        Compares only xpos and ypos for both self and other
+
+        :param other:
+        :return boolean:
+        """
+
+        # if we are comparing a position to a non-position
+        if not isinstance(other, Position): # this doesn't even make sense, they are not equal
+            return False
+
+        return self.xpos == other.xpos and self.ypos == other.ypos

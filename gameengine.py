@@ -23,6 +23,7 @@ class GameEngine:
         self.board = Board()
         self.current_turn = 'white'
         self.moves_count = 0
+        self.game_winner = None
 
     @staticmethod
     def ask_for_position() -> Optional[Position]:
@@ -36,7 +37,7 @@ class GameEngine:
 
         while True:
             # Asks the user for an input position
-            selected_position = input("Select a position: A-H 1-8").upper()  # standardize the input to UPPERCASE
+            selected_position = input("Select a position: A-H 1-8: ").upper()  # standardize the input to UPPERCASE
 
             # if input is greater than 2 chars, we will ignore the rest.
             try:
@@ -46,6 +47,7 @@ class GameEngine:
                     print("Selected position out of board. Select a position A-H 1-8")
                     continue
                 else:
+                    print("Selected position: ", selected_square)
                     return selected_square
             except ValueError:  # input was not correct
                 print("Bad input: Inform your position in simple file-rank format, as A1, B2, C3, etc.")
@@ -97,7 +99,7 @@ class GameEngine:
             print(f"Legal moves:", end=" ")
             for move in legal_moves_list:
                 print(move, end=" ,")
-                print("\n")
+            print('\n')
 
             return legal_moves_list
 
@@ -126,6 +128,27 @@ class GameEngine:
             # perform the actual move
             self.board.move_piece(start_pos=moving_piece.position, end_pos=desired_square)
 
-            # change the turn
+            # Display the current state of the board in console
+            print(self.board)
+
+            # TODO: Remove, this should be the responsibility of game_run
             self.current_turn = 'black' if self.current_turn == 'white' else 'white'
             print("Current turn: ", self.current_turn)
+
+            # end the turn
+            break
+
+    def check_game_ended(self) -> bool:
+        """
+        Checks natural conditions for the game to end, including:
+        - Checkmate
+        - Stalemate
+        - More than 50 moves without captures or pawn movement
+        - Repeating positions
+
+        :return bool:
+        """
+
+        # TODO: Implement
+        
+        pass

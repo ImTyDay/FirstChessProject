@@ -115,6 +115,7 @@ class Pawn(Piece):
     def __init__(self, color, position):
         super().__init__(color, position)
 
+
     def __str__(self):
         return f"{"P" if self.color == 'white' else "p"}{self.position}"
 
@@ -128,19 +129,41 @@ class Pawn(Piece):
 
         legal_moves = []  # standardize the  output of the function
 
-        non_capture_directions = [(0, 1)]  # one square ahead
+        # if color is white, it moves upward in the board, if it's black, we move downwards.
+        forward = 1 if self.color == 'white' else -1
+
+        # Define straight directions the pawn can go
+        non_capture_directions = [(0, forward)]  # one square ahead
         if not self.has_moved:  # if it is the first move
-            non_capture_directions.append((0, 2))  # we can move 2 squares
+            non_capture_directions.append((0, 2 * forward))  # we can move 2 squares
         for direction in non_capture_directions:
-            if not board.get_piece(self.position + direction):  # if the square is empty
-                legal_moves.append(direction)  # the square must not be blocked
-        capture_directions = (1, 1), (-1, 1)   # we must have an enemy piece to go diagonally
+            desired_square = self.position + direction
+            if not board.get_piece(desired_square):  # if the square is empty
+                legal_moves.append(desired_square)  # the square must not be blocked
+            else: break  # if the first square is occupied, we cant go 2 squares forward as well
+
+        # Define diagonal directions the pawn can go
+        capture_directions = [(1, forward), (-1, forward)]   # we must have an enemy piece to go diagonally
         for direction in capture_directions:
-            piece_on_square = board.get_piece(self.position + direction)
+            desired_square = self.position + direction
+            piece_on_square = board.get_piece(desired_square)
             if piece_on_square and piece_on_square.color != self.color:  # enemy piece in there
-                legal_moves.append(direction)
+                legal_moves.append(desired_square)
 
         return legal_moves
+
+    def promote(self):
+        """
+        TODO: Implement
+        Triggered when
+        self.position.ypos == 8 if self.color == 'white' else 1
+        This means the piece has reached the other side of the board.
+
+        Asks the user to choose between Queen, Knight, Bishop, Rook, and morphs self into the chosen class
+
+        :return:
+        """
+        pass
 
 
 class King(OneMovePiece):

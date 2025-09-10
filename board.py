@@ -1,3 +1,28 @@
+"""
+Manages the core components of the chessboard, including its state and pieces.
+
+This module defines the Board class, which is central to the chess game's
+state management. It utilizes a pandas DataFrame to represent the 8x8 grid,
+providing a robust and efficient way to store and access piece information.
+
+A critical convention to understand in this module is the handling of coordinates:
+
+Position Objects (x, y): Throughout the program, board squares are
+represented by Position objects. These objects use a standard Cartesian-style
+coordinate system where position.xpos corresponds to the file (A-H, or 1-8)
+and position.ypos corresponds to the rank (1-8). This is the intuitive
+"file, then rank" system used in chess.
+
+DataFrame Access (.loc[y, x]): When directly accessing the pandas
+DataFrame grid, the .loc accessor must be used in [row, column] format.
+In the context of the chessboard, this translates to grid.loc[rank, file]
+or, using Position attributes, grid.loc[position.ypos, position.xpos].
+
+Failing to respect this (y, x) order for DataFrame access while using
+(x, y) for Position objects will lead to pieces having a different internal
+position that the one the board displays.
+"""
+
 import pandas as pd
 from pieces import *
 from typing import Optional
@@ -101,15 +126,7 @@ class Board:
 
             # Update the Board grid as well
             self.grid.loc[start_pos.ypos, start_pos.xpos] = None  # remove the piece from the original square
-            self.grid.loc[end_pos.xpos, end_pos.ypos] = piece_to_move  # move the piece into the end square
-
-
-class Square:
-    def __init__(self, position):
-
-        self.position = position
-        self.color = 'white' if position.x % 2 == position.y % 2 == 0 else 'black'
-        self.is_occupied = False
+            self.grid.loc[end_pos.ypos, end_pos.xpos] = piece_to_move  # move the piece into the end square
 
 
 if __name__ == '__main__':

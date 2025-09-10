@@ -115,39 +115,20 @@ Handle Clicks: Implement click handlers. The first click saves the start square.
 Update the Display: After your engine confirms a move was made, call your drawing function again to show the new board.
 """
 
-from board import Board
-from position import Position
+#from board import Board
+#from position import Position
+
+from gameengine import GameEngine
 
 # Temporary Phase 1. Main process
 if __name__ == '__main__':
-    tab = Board()
-    print("Initial Board State:")
-    print(tab)
-    print("-"*30)
+    gameengine = GameEngine()
+    print("Game start! \n Current turn: White \n")
+    print(gameengine.board, '\n')
+    gameengine.play_turn()
+    print("First turn ended")
+    gameengine.play_turn()
+    print(gameengine.board, '\n')
+    print("Second turn Ended")
+    gameengine.play_turn()
 
-    # Test with a position
-    test_pos = Position(2, 1)
-
-    # Get a test piece
-    test_piece = tab.get_piece(test_pos)
-
-    if not test_piece:
-        print(f"No piece found at position {test_pos}.")
-    else:
-        print(f"Testing piece: {test_piece.color} {type(test_piece).__name__} at {test_pos}")
-
-        #    Ask the piece for its legal moves.
-        #    We pass the 'chess_board' object so the piece knows the state of the game.
-        legal_moves = test_piece.get_legal_moves(tab)
-
-        # 6. Print the results.
-        if legal_moves:
-            # The __repr__ of the Position object will make this list readable.
-            print("Found legal moves:", legal_moves)
-        else:
-            print("No legal moves were found.")
-
-        # We will now actually move the piece, this time we will hardcode a knight move
-        tab.move_piece(test_piece.position, legal_moves[0])  # move it to the first legal_move we find
-
-        print(tab)  # see the update
