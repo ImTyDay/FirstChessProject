@@ -124,11 +124,8 @@ from gameengine import GameEngine
 if __name__ == '__main__':
     gameengine = GameEngine()
     print("Game start! \n Current turn: White \n")
-    print(gameengine.board, '\n')
-    gameengine.play_turn()
-    print("First turn ended")
-    gameengine.play_turn()
-    print(gameengine.board, '\n')
-    print("Second turn Ended")
-    gameengine.play_turn()
+    while True:
+        print(gameengine.board, '\n')
+        gameengine.play_turn()
+        print('Turn Ended')
 
