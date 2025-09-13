@@ -65,7 +65,7 @@ class Position:
         """
 
         # if we are comparing a position to a non-position
-        if not isinstance(other, Position): # this doesn't even make sense, they are not equal
+        if not isinstance(other, Position):  # this doesn't even make sense, they are not equal
             return False
 
         return self.xpos == other.xpos and self.ypos == other.ypos

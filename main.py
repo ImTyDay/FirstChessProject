@@ -115,17 +115,9 @@ Handle Clicks: Implement click handlers. The first click saves the start square.
 Update the Display: After your engine confirms a move was made, call your drawing function again to show the new board.
 """
 
-#from board import Board
-#from position import Position
-
 from gameengine import GameEngine
 
-# Temporary Phase 1. Main process
+# Temporary  Main process
 if __name__ == '__main__':
     gameengine = GameEngine()
-    print("Game start! \n Current turn: White \n")
-    while True:
-        print(gameengine.board, '\n')
-        gameengine.play_turn()
-        print('Turn Ended')
-
+    gameengine.game_run()

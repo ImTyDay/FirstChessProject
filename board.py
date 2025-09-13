@@ -24,6 +24,7 @@ position that the one the board displays.
 """
 
 import pandas as pd
+import copy
 from pieces import *
 from typing import Optional
 
@@ -34,11 +35,12 @@ class Board:
     Represents the chessboard and the state of all pieces on it
     Manages the 8x8 dataframe and the initial setup of the game
     """
-    def __init__(self):
+    def __init__(self, setup_pieces=True):
         # Create a 8x8 DataFrame, filling it with None initially
         # The index represents the ranks (y) and columns the files (x)
         self.grid = pd.DataFrame(None, index=range(1, 9), columns=range(1, 9))
-        self._setup_pieces()
+        if setup_pieces:
+            self._setup_pieces()
 
     def get_piece(self, position: Position) -> Optional[Piece]:
         """
@@ -127,6 +129,38 @@ class Board:
             # Update the Board grid as well
             self.grid.loc[start_pos.ypos, start_pos.xpos] = None  # remove the piece from the original square
             self.grid.loc[end_pos.ypos, end_pos.xpos] = piece_to_move  # move the piece into the end square
+
+    def deep_copy(self):
+        """
+        Creates a new, completely independent copy of the Board object.
+
+        This is important for validating moves, allowing for simulating
+        moves on a temporary board without affecting the actual game state.
+
+        Even a copy.deepcopy or a pandas copy(deep=True) isn't enough for
+        creating a independent instance, so we have to copy piece by piece.
+
+        :return: A new Board instance with a deep copy of the grid.
+        """
+
+        # create a new Board instance, without the initial pieces
+        new_board = Board(setup_pieces=False)
+
+        # define a helper function to copy piece by piece
+        def _copy_piece(piece_to_copy: Piece):
+            if not piece_to_copy or pd.isna(piece_to_copy):  # for empty squares
+                return None
+
+            # generate a new Piece copying the original attributes, and it's class
+            new_piece = piece_to_copy.__class__(piece_to_copy.color, copy.deepcopy(piece_to_copy.position))
+            new_piece.has_moved = piece_to_copy.has_moved
+
+            return new_piece
+
+        # apply the copy function to all pieces
+        new_board.grid = self.grid.map(_copy_piece)
+
+        return new_board
 
 
 if __name__ == '__main__':

@@ -1,3 +1,7 @@
+"""
+Defines all pieces of the game, and define their legal moves.
+"""
+
 from __future__ import annotations
 
 from position import Position
@@ -35,7 +39,7 @@ class Piece:
         return f"{self.color} Piece"
 
     def get_legal_moves(self, board):
-        # will be overridden by the child class, if not, raises error
+        """ will be overridden by the child class, if not, raises error"""
         raise NotImplementedError("Each piece must have their own get_legal_moves method")
 
 
@@ -115,7 +119,6 @@ class Pawn(Piece):
     def __init__(self, color, position):
         super().__init__(color, position)
 
-
     def __str__(self):
         return f"{"P" if self.color == 'white' else "p"}{self.position}"
 
@@ -140,7 +143,8 @@ class Pawn(Piece):
             desired_square = self.position + direction
             if not board.get_piece(desired_square):  # if the square is empty
                 legal_moves.append(desired_square)  # the square must not be blocked
-            else: break  # if the first square is occupied, we cant go 2 squares forward as well
+            else:
+                break  # if the first square is occupied, we cant go 2 squares forward as well
 
         # Define diagonal directions the pawn can go
         capture_directions = [(1, forward), (-1, forward)]   # we must have an enemy piece to go diagonally
