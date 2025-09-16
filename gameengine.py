@@ -43,6 +43,7 @@ class GameEngine:
         print("Game start!")
         while not self.game_winner:
 
+            print("Current turn: ", self.current_turn)
             print(self.board)
             self.play_turn()
 
@@ -53,7 +54,7 @@ class GameEngine:
             if self._is_in_check(self.current_turn, self.board,
                                  self.white_king_pos if self.current_turn == 'white' else self.black_king_pos):
                 print(f"\nCHECK! The {self.current_turn} king is under attack!")
-            print("Current turn: ", self.current_turn)
+            self.check_game_ended()
 
     @staticmethod
     def ask_for_position() -> Position | str:
@@ -69,7 +70,7 @@ class GameEngine:
             # Asks the user for an input position
             selected_position = input("Select a position: A-H 1-8: ").upper()  # standardize the input to UPPERCASE
 
-            # Define a way to resign, so game ends
+            # Define a way to resign by input
             if selected_position.lower() == 'resign':
                 return 'resign'
 
@@ -77,13 +78,13 @@ class GameEngine:
             try:
                 selected_square = Position(xpos=ord(selected_position[0]) - ord('A') + 1,  # letter input to numeric
                                            ypos=int(selected_position[1]))  # the second letter of the input must be 1-8
-                if not selected_square.on_board:  # if the position is not on board, but valid
+                if not selected_square.on_board:
                     print("Selected position out of board. Select a position A-H 1-8")
                     continue
                 else:
                     print("Selected position: ", selected_square)
                     return selected_square
-            except (ValueError, IndexError):  # input was not correct
+            except (ValueError, IndexError):
                 print("Bad input: Inform your position in simple file-rank format, as A1, B2, C3, etc.")
                 continue
 
@@ -105,12 +106,12 @@ class GameEngine:
             if position == 'resign':
                 return position
 
-            selected_piece = self.board.get_piece(position)  # gets the Piece (or None) from selected square
+            selected_piece = self.board.get_piece(position)
 
-            # validated if there is a piece, and if it is a piece of the same color as self.current_turn
-            if not selected_piece or selected_piece.color != self.current_turn:  # validate selected piece
+            # validated if there is a piece, and a piece of the same color
+            if not selected_piece or selected_piece.color != self.current_turn:
                 print("Selected square must have a piece in the same color as the current player turn")
-                continue  # ask again
+                continue
             return selected_piece
 
     def calculate_and_show_moves(self, piece: Piece) -> list:
@@ -118,13 +119,12 @@ class GameEngine:
         Calculate and show all the pseudo-legal moves for a given piece
 
         :param piece:
-        :return legal_moves:
+        :return legal_moves: List with all legal moves the piece can perform in the board's current state.
         """
-        legal_moves_list = self.get_fully_legal_moves(piece)  # calculates the fully legal moves for the piece
 
-        # tell the user what piece he selected
+        legal_moves_list = self.get_fully_legal_moves(piece)  # calculates the legal moves for the piece
+
         print(f"Moving piece: {piece}")
-        # shows the legal moves to the user
         print(f"Legal moves:", end=" ")
         for move in legal_moves_list:
             print(move, end=", ")
@@ -144,8 +144,6 @@ class GameEngine:
         :return:
         """
 
-        # while True:  # infinite loop that breaks only if a piece actually moves
-
         # Ask the user for a (first) piece to move
         print("Select a piece to move:")
         moving_piece = self.ask_select_piece()
@@ -158,11 +156,10 @@ class GameEngine:
         # create an infinite loop that only breaks when a piece actually moves
         while True:
 
-            # define and show the legal moves for the selected piece
             legal_moves = self.calculate_and_show_moves(moving_piece)
 
             # Ask the user what square he wants to go
-            desired_square = self.ask_for_position()  # already validates if square is valid
+            desired_square = self.ask_for_position()
 
             # Check again for resignation after a piece was selected
             if desired_square == 'resign':
@@ -174,15 +171,14 @@ class GameEngine:
             # assume the user wants to change piece if he selected a piece with the same color
             if desired_square_occupant and desired_square_occupant.color == self.current_turn:
                 print("Moving piece changed to ", desired_square_occupant)
-                moving_piece = desired_square_occupant  # change the moving_piece
-                continue  # calculate again
+                moving_piece = desired_square_occupant
+                continue
 
             # Check if the desired move is illegal
             if desired_square not in legal_moves:
                 print("Illegal movement. Please select a valid movement for the piece")
                 continue
 
-            # perform the actual move
             self.board.move_piece(start_pos=moving_piece.position, end_pos=desired_square)
 
             # Define if the current turn is a action turn: a pawn movement or a capture
@@ -193,10 +189,9 @@ class GameEngine:
 
             # Check if the user is moving the king, so we can store its position on the board
             if isinstance(moving_piece, King):
-                # check what color is the moving king, and update the board
                 if moving_piece.color == 'white':
                     self.white_king_pos = desired_square
-                else:  # It must be the black king
+                else:
                     self.black_king_pos = desired_square
 
             break
@@ -214,7 +209,7 @@ class GameEngine:
         :param piece: The Piece object to calculate moves for.
         :return: A list of Position objects representing all valid, king-safe moves.
         """
-        # fet all moves the piece can make, ignoring king safety.
+        # get all moves the piece can make, ignoring king safety.
         pseudo_legal_moves = piece.get_legal_moves(self.board)
         fully_legal_moves = []
 
@@ -225,7 +220,6 @@ class GameEngine:
             piece_to_move_on_copy = hypothetical_board.get_piece(piece.position)
             hypothetical_board.move_piece(piece_to_move_on_copy.position, move)
 
-            # Get the original king position first
             king_pos_to_check = self.white_king_pos if piece.color == 'white' else self.black_king_pos
             # If the piece we are moving is the king, its new position will be the destination square.
             if isinstance(piece, King):
@@ -245,16 +239,36 @@ class GameEngine:
         - More than 50 moves without captures or pawn movement
         - Repeating positions
 
-        :return bool:
+        :return str or None: 'white', 'black' or 'draw', whoever has won None if game gas not ended
         """
 
-        # TODO: Implement
+        # check if the game is a draw by having 50 or more moves without captures or pawn movement
+        if self.no_action_turns >= 50:
+            self.game_winner = 'draw'
+            return False
 
-        pass
+        # verify if current turn player has any legal moves at all: we need to iterate trough the entire board
+        for file in range(1, 9):
+            for rank in range(1, 9):
+                piece = self.board.get_piece(Position(file, rank))
+                if piece and piece.color == self.current_turn and self.get_fully_legal_moves(piece):
+                    return False
+
+        # getting here means no legal moves were found, so we need to differentiate between checkmate and stalemate
+        if not self._is_in_check(self.current_turn, self.board,  # stalemate
+                                 king_pos=self.white_king_pos if self.current_turn == 'white' else self.black_king_pos):
+            self.game_winner = 'draw'
+            print("Stalemate! It's a draw!")
+            return True
+        else:  # checkmate
+            self.game_winner = self._opposite_color(self.current_turn)
+            print(f"Checkmate! {self.game_winner} wins!")
+
+        return False
 
     @staticmethod
     def _opposite_color(color: str):
-        return 'black' if color == 'white' else 'black'
+        return 'black' if color == 'white' else 'white'
 
     def resign(self):
         """
@@ -263,6 +277,7 @@ class GameEngine:
 
         :return:
         """
+        print(f"{self.current_turn} resigned! {self._opposite_color(self.current_turn)} wins!")
         self.game_winner = self._opposite_color(self.current_turn)
 
     @staticmethod
@@ -284,8 +299,8 @@ class GameEngine:
         # Try every direction a knight can move
         for direction in [(2, 1), (-2, 1), (2, -1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]:
             suspect_piece = board.get_piece(king_pos + direction)
-            if isinstance(suspect_piece, Knight) and suspect_piece.color != color:  # we check if it is an enemy knight
-                return True  # it's attacking us
+            if isinstance(suspect_piece, Knight) and suspect_piece.color != color:
+                return True
 
         """
         Check the straight lines around the king for enemy pieces,
@@ -293,7 +308,7 @@ class GameEngine:
         """
         straight_directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         diagonal_down_directions = [(1, -1), (-1, -1)]  # separating is useful for checking pawn attacks
-        diagonal_up_directions = [(1, 1), (-1, 1)]  # (x, y)
+        diagonal_up_directions = [(1, 1), (-1, 1)]
         diagonal_directions = diagonal_down_directions + diagonal_up_directions
         all_directions = straight_directions + diagonal_directions
 
@@ -307,16 +322,16 @@ class GameEngine:
                 suspect_piece = board.get_piece(current_pos)
 
                 # check cases where there is not an enemy piece in that line of sight
-                if not suspect_piece:  # if square is empty
+                if not suspect_piece:
                     continue  # go to next square in that direction
-                elif suspect_piece.color == color:  # if it is a friendly piece
-                    break  # we won't go further in that direction
+                elif suspect_piece.color == color:
+                    break
 
                 # if we got here, we have a enemy piece in line of sight.
                 if direction in straight_directions:
-                    if isinstance(suspect_piece, (Rook, Queen)):  # we are checking straight.
+                    if isinstance(suspect_piece, (Rook, Queen)):
                         return True
-                    break  # no threats here
+                    break
 
                 # if we are not in a straight line, we are in a diagonal line
                 if isinstance(suspect_piece, (Bishop, Queen)):
@@ -329,5 +344,4 @@ class GameEngine:
                 else:
                     break
 
-        # if no True condition in any direction
         return False

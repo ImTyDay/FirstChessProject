@@ -151,7 +151,7 @@ class Pawn(Piece):
         for direction in capture_directions:
             desired_square = self.position + direction
             piece_on_square = board.get_piece(desired_square)
-            if piece_on_square and piece_on_square.color != self.color:  # enemy piece in there
+            if piece_on_square and piece_on_square.color != self.color:
                 legal_moves.append(desired_square)
 
         return legal_moves

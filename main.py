@@ -117,7 +117,7 @@ Update the Display: After your engine confirms a move was made, call your drawin
 
 from gameengine import GameEngine
 
-# Temporary  Main process
+# Temporary Main process
 if __name__ == '__main__':
     gameengine = GameEngine()
     gameengine.game_run()
