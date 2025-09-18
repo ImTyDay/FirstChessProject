@@ -319,6 +319,39 @@ class GameEngine:
         print(f"{self.current_turn} resigned! {self._opposite_color(self.current_turn)} wins!")
         self.game_winner = self._opposite_color(self.current_turn)
 
+    def _possible_castles(self) -> tuple[bool, bool]:
+        """
+        Checks the side a king can castle:
+        Checks all conditions that impede a castle
+
+        :return tuple(bool(king_side_castle), bool(queen_side_castle): True for each side castle is possible
+        """
+
+        king_side_castle = True
+        queen_side_castle = True
+
+        king_pos = self.white_king_pos if self.current_turn == 'white' else self.black_king_pos
+        king = self.board.get_piece(king_pos)
+        castle_rank = 1 if self.current_turn == 'white' else 8
+
+        if king.has_moved:
+            return False, False
+
+        potential_king_rook = self.board.get_piece(Position(8, castle_rank))
+        potential_queen_rook = self.board.get_piece(Position(1, castle_rank))
+
+        for potential_rook in (potential_king_rook, potential_queen_rook):
+            if not isinstance(potential_rook, Rook) or potential_rook.has_moved:
+                if potential_rook is potential_king_rook:
+                    king_side_castle = False
+                else:
+                    queen_side_castle = False
+
+        king_empty_needed_files = [6, 7]
+        king_safe_needed_files = [5, 6, 7]
+
+        return king_side_castle, queen_side_castle
+
     @staticmethod
     def _is_in_check(color: str, board: Board, king_pos: Position) -> bool:
         """
