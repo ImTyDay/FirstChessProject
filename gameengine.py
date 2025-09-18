@@ -47,7 +47,6 @@ class GameEngine:
             print(self.board)
             self.play_turn()
 
-            # Display the current state of the board in console
             print(self.board)
 
             self.current_turn = self._opposite_color(self.current_turn)
@@ -56,6 +55,7 @@ class GameEngine:
                 print(f"\nCHECK! The {self.current_turn} king is under attack!")
             self.check_game_ended()
 
+    # noinspection PyTypeChecker
     @staticmethod
     def ask_for_position() -> Position | str:
         """
@@ -108,7 +108,6 @@ class GameEngine:
 
             selected_piece = self.board.get_piece(position)
 
-            # validated if there is a piece, and a piece of the same color
             if not selected_piece or selected_piece.color != self.current_turn:
                 print("Selected square must have a piece in the same color as the current player turn")
                 continue
@@ -122,7 +121,7 @@ class GameEngine:
         :return legal_moves: List with all legal moves the piece can perform in the board's current state.
         """
 
-        legal_moves_list = self.get_fully_legal_moves(piece)  # calculates the legal moves for the piece
+        legal_moves_list = self.get_fully_legal_moves(piece)
 
         print(f"Moving piece: {piece}")
         print(f"Legal moves:", end=" ")
@@ -168,7 +167,7 @@ class GameEngine:
 
             # check if the user wants to change the moving piece, by selecting a square with a same color piece
             desired_square_occupant = self.board.get_piece(desired_square)
-            # assume the user wants to change piece if he selected a piece with the same color
+
             if desired_square_occupant and desired_square_occupant.color == self.current_turn:
                 print("Moving piece changed to ", desired_square_occupant)
                 moving_piece = desired_square_occupant
@@ -181,11 +180,17 @@ class GameEngine:
 
             self.board.move_piece(start_pos=moving_piece.position, end_pos=desired_square)
 
-            # Define if the current turn is a action turn: a pawn movement or a capture
-            # This types of move reset the 50 move limit that makes the game end in draw
-            if desired_square_occupant or isinstance(moving_piece, Pawn):
+            # Define if the current turn is an action turn: a pawn movement or a capture
+            # These types of move reset the 50 move limit that makes the game end in draw
+            is_pawn_move = isinstance(moving_piece, Pawn)
+            if is_pawn_move or desired_square_occupant:
                 self.no_action_turns = 0
-            self.no_action_turns += 1
+            else:
+                self.no_action_turns += 1
+
+            # Check if a pawn has reached promotion rank
+            if is_pawn_move and desired_square.ypos in (1, 8):
+                self._handle_promotion(desired_square)
 
             # Check if the user is moving the king, so we can store its position on the board
             if isinstance(moving_piece, King):
@@ -195,6 +200,40 @@ class GameEngine:
                     self.black_king_pos = desired_square
 
             break
+
+    @staticmethod
+    def _ask_promotion_choice() -> type[Piece]:
+        """
+        Asks the user for their choice when promoting, and validates the input.
+
+        :return type[Piece]: The type of piece we are promoting to
+        """
+
+        while True:
+            choice = input("Pawn promotion: Choose (Q) Queen, (R)ook, (B) Bishop or (N) Knight").upper()
+            match choice:
+                case 'Q' | 'QUEEN':
+                    return Queen
+                case 'R' | 'ROOK':
+                    return Rook
+                case 'B' | 'BISHOP':
+                    return Bishop
+                case 'N' | 'Knight':
+                    return Knight
+            print("Invalid choice. Choose (Q) Queen, (R)ook, (B) Bishop or (N) Knight")
+
+    def _handle_promotion(self, reached_square: Position) -> None:
+        """
+        Manages the pawn promotion process
+
+        :param reached_square: The position the pawn we are promotion has reached
+        :return:
+        """
+
+        new_piece = self._ask_promotion_choice()
+
+        self.board.promote_pawn(reached_square, new_piece)
+
 
     def get_fully_legal_moves(self, piece: Piece) -> list[Position]:
         """
@@ -221,7 +260,7 @@ class GameEngine:
             hypothetical_board.move_piece(piece_to_move_on_copy.position, move)
 
             king_pos_to_check = self.white_king_pos if piece.color == 'white' else self.black_king_pos
-            # If the piece we are moving is the king, its new position will be the destination square.
+
             if isinstance(piece, King):
                 king_pos_to_check = move
 
@@ -247,7 +286,7 @@ class GameEngine:
             self.game_winner = 'draw'
             return False
 
-        # verify if current turn player has any legal moves at all: we need to iterate trough the entire board
+        # verify if current turn player has any legal moves at all: we need to iterate the entire board
         for file in range(1, 9):
             for rank in range(1, 9):
                 piece = self.board.get_piece(Position(file, rank))
@@ -255,7 +294,7 @@ class GameEngine:
                     return False
 
         # getting here means no legal moves were found, so we need to differentiate between checkmate and stalemate
-        if not self._is_in_check(self.current_turn, self.board,  # stalemate
+        if not self._is_in_check(self.current_turn, self.board,
                                  king_pos=self.white_king_pos if self.current_turn == 'white' else self.black_king_pos):
             self.game_winner = 'draw'
             print("Stalemate! It's a draw!")
@@ -327,7 +366,7 @@ class GameEngine:
                 elif suspect_piece.color == color:
                     break
 
-                # if we got here, we have a enemy piece in line of sight.
+                # if we got here, we have an enemy piece in line of sight.
                 if direction in straight_directions:
                     if isinstance(suspect_piece, (Rook, Queen)):
                         return True
@@ -335,7 +374,7 @@ class GameEngine:
 
                 # if we are not in a straight line, we are in a diagonal line
                 if isinstance(suspect_piece, (Bishop, Queen)):
-                    return True  # they can threaten us
+                    return True
                 elif isinstance(suspect_piece, Pawn) and steps == 1:  # the pawn must be diagonal and near to threaten
                     if direction in diagonal_up_directions and color == 'white':
                         return True

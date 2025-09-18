@@ -10,7 +10,7 @@ class Position:
         self.xpos = xpos
         self.ypos = ypos
 
-        self.on_board = 0 < xpos <= 8 and 0 < ypos <= 8  # boolean
+        self.on_board = 0 < xpos <= 8 and 0 < ypos <= 8
 
     @property
     def xpos(self):
@@ -27,10 +27,6 @@ class Position:
         """Set the value of x as an integer between 1 and 8 (inclusive)"""
         if not isinstance(value, int):
             raise ValueError("Value of letters position must be an integer")
-        if not 1 <= value <= 8:
-            # old ValueError method for checking if position is on board
-            # raise ValueError ("Value of letters position must be between 1 and 8")
-            pass
 
         self._xpos = value
 
@@ -39,8 +35,6 @@ class Position:
         """Set the value of y as an integer between 1 and 8 (inclusive)"""
         if not isinstance(value, int):
             raise ValueError("Value of letters position must be an integer")
-        # if not 1 <= value <= 8:
-            # raise ValueError ("Value of letters position must be between 1 and 8")
 
         self._ypos = value
 
@@ -48,7 +42,7 @@ class Position:
         """Overloads the '+' operator to add a tuple (x, y) to a Position."""
         if not isinstance(other, tuple) or len(other) != 2:  # bad input
             raise TypeError("Can only add a tuple of (dx, dy) to a Position.")
-        dx, dy = other  # unpacksthe tuple
+        dx, dy = other
         return Position(self.xpos + dx, self.ypos + dy)
 
     def __repr__(self):
@@ -64,7 +58,6 @@ class Position:
         :return boolean:
         """
 
-        # if we are comparing a position to a non-position
         if not isinstance(other, Position):  # this doesn't even make sense, they are not equal
             return False
 

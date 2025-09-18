@@ -36,6 +36,7 @@ class Board:
     Manages the 8x8 dataframe and the initial setup of the game
     """
     def __init__(self, setup_pieces=True):
+
         # Create a 8x8 DataFrame, filling it with None initially
         # The index represents the ranks (y) and columns the files (x)
         self.grid = pd.DataFrame(None, index=range(1, 9), columns=range(1, 9))
@@ -52,7 +53,6 @@ class Board:
         :return: Piece or None
         """
 
-        # get None if the position is not on board
         if not position.on_board: return None
 
         # get the piece based on the grid
@@ -64,7 +64,7 @@ class Board:
         """
         Private method to place all pieces in their starting positions when creating the object
         """
-        # place black pieces
+        # black pieces
         for i in range(1, 9):  # place all pawns
             self.grid.loc[7, i] = Pawn('black', Position(i, 7))
         self.grid.loc[8, 1] = Rook('black', Position(1, 8))
@@ -76,7 +76,7 @@ class Board:
         self.grid.loc[8, 4] = Queen('black', Position(4, 8))
         self.grid.loc[8, 5] = King('black', Position(5, 8))
 
-        # place white pieces
+        # white pieces
         for i in range(1, 9):
             self.grid.loc[2, i] = Pawn('white', Position(i, 2))
         self.grid.loc[1, 1] = Rook('white', Position(1, 1))
@@ -119,16 +119,34 @@ class Board:
 
         piece_to_move = self.get_piece(start_pos)
 
-        if piece_to_move:  # just to be sure we are moving something
-            # Update the piece Position attribute
+        if piece_to_move:  # safety check
+            # Update the piece
             piece_to_move.position = end_pos
 
-            # Update the has_moves flag, used by Pawn, Rook, King
             piece_to_move.has_moved = True
 
-            # Update the Board grid as well
-            self.grid.loc[start_pos.ypos, start_pos.xpos] = None  # remove the piece from the original square
-            self.grid.loc[end_pos.ypos, end_pos.xpos] = piece_to_move  # move the piece into the end square
+            # Update the Board
+            self.grid.loc[start_pos.ypos, start_pos.xpos] = None
+            self.grid.loc[end_pos.ypos, end_pos.xpos] = piece_to_move
+
+    def promote_pawn(self, position: Position, promotion_choice: type[Piece]) -> None:
+        """
+        Replaces the pawn at the given position with a new piece of the chosen class.
+
+        :param position: The square where the promotion is happening
+        :param promotion_choice: The class of the new piece
+        """
+
+        pawn_to_promote = self.get_piece(position)
+        if not isinstance(pawn_to_promote, Pawn):
+            raise Exception("Only paws can be promoted!")  # safety check
+
+        # Switch the class of the piece
+        new_piece = promotion_choice(pawn_to_promote.color, position)
+        new_piece.has_moved = True
+
+        # Replace in the board
+        self.grid.loc[position.ypos, position.xpos] = new_piece
 
     def deep_copy(self):
         """
@@ -143,12 +161,11 @@ class Board:
         :return: A new Board instance with a deep copy of the grid.
         """
 
-        # create a new Board instance, without the initial pieces
         new_board = Board(setup_pieces=False)
 
         # define a helper function to copy piece by piece
         def _copy_piece(piece_to_copy: Piece):
-            if not piece_to_copy or pd.isna(piece_to_copy):  # for empty squares
+            if not piece_to_copy or pd.isna(piece_to_copy):
                 return None
 
             # generate a new Piece copying the original attributes, and it's class
@@ -161,7 +178,6 @@ class Board:
         new_board.grid = self.grid.map(_copy_piece)
 
         return new_board
-
 
 if __name__ == '__main__':
     tab = Board()
