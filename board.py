@@ -129,6 +129,34 @@ class Board:
             self.grid.loc[start_pos.ypos, start_pos.xpos] = None
             self.grid.loc[end_pos.ypos, end_pos.xpos] = piece_to_move
 
+    def perform_castle(self, king_start_pos: Position, king_end_pos: Position):
+        """
+        Performs the special two-part castling move on the board.
+
+        It first moves the king, then determines which rook to move based on
+        the king's destination and moves it accordingly.
+
+        :param king_start_pos: The starting position of the King.
+        :param king_end_pos: The ending position of the King (G or C file).
+        """
+
+        print(f"Debug: castling {king_start_pos}, {king_start_pos}")
+
+        castling_rank = king_start_pos.ypos
+
+        # Move King
+        self.move_piece(king_start_pos, king_end_pos)
+
+        # Move the Rook
+        if king_end_pos.xpos == 7:
+            castling_rook_pos = Position(8, castling_rank)
+            rook_destination = Position(6, castling_rank)
+        else:
+            castling_rook_pos = Position(1, castling_rank)
+            rook_destination = Position(4, castling_rank)
+
+        self.move_piece(castling_rook_pos, rook_destination)
+
     def promote_pawn(self, position: Position, promotion_choice: type[Piece]) -> None:
         """
         Replaces the pawn at the given position with a new piece of the chosen class.

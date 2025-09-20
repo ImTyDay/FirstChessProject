@@ -178,6 +178,17 @@ class GameEngine:
                 print("Illegal movement. Please select a valid movement for the piece")
                 continue
 
+            # Handle castling
+            is_castle_move = (
+                isinstance(moving_piece, King) and
+                abs(moving_piece.position.xpos - desired_square.xpos) == 2
+            )
+            if is_castle_move:
+                self.board.perform_castle(moving_piece.position, desired_square)
+                self.no_action_turns = 0
+                self._update_king_pos(moving_piece, desired_square)
+                break
+
             self.board.move_piece(start_pos=moving_piece.position, end_pos=desired_square)
 
             # Define if the current turn is an action turn: a pawn movement or a capture
@@ -194,10 +205,7 @@ class GameEngine:
 
             # Check if the user is moving the king, so we can store its position on the board
             if isinstance(moving_piece, King):
-                if moving_piece.color == 'white':
-                    self.white_king_pos = desired_square
-                else:
-                    self.black_king_pos = desired_square
+                self._update_king_pos(moving_piece, desired_square)
 
             break
 
@@ -237,13 +245,16 @@ class GameEngine:
 
     def get_fully_legal_moves(self, piece: Piece) -> list[Position]:
         """
-        Calculates all fully legal moves for a given piece, considering king safety.
+        Calculates all fully legal moves for a given piece, including special rules.
 
         This method first gets all pseudo-legal moves (moves that follow the
         piece's basic movement rules). It then filters this list by simulating
         each move on a temporary copy of the board. A move is only considered
         fully legal if it does not leave the player's own king in check after
         the move is made.
+
+        Also appends castling and (future implementation) en passant to legal moves,
+        if the necessary conditions are met.
 
         :param piece: The Piece object to calculate moves for.
         :return: A list of Position objects representing all valid, king-safe moves.
@@ -268,6 +279,14 @@ class GameEngine:
             if not self._is_in_check(piece.color, hypothetical_board, king_pos_to_check):
                 fully_legal_moves.append(move)
 
+        # Get castling moves
+        if isinstance(piece, King):
+            can_castle_king_side, can_castle_queen_side = self._possible_castles()
+            if can_castle_king_side:
+                fully_legal_moves.append(Position(7, piece.position.ypos))
+            if can_castle_queen_side:
+                fully_legal_moves.append(Position(3, piece.position.ypos))
+
         return fully_legal_moves
 
     def check_game_ended(self) -> bool:
@@ -282,7 +301,7 @@ class GameEngine:
         """
 
         # check if the game is a draw by having 50 or more moves without captures or pawn movement
-        if self.no_action_turns >= 50:
+        if self.no_action_turns >= 100:
             self.game_winner = 'draw'
             return False
 
@@ -337,9 +356,9 @@ class GameEngine:
         if king.has_moved:
             return False, False
 
+        # Check if we have rooks on extremes
         potential_king_rook = self.board.get_piece(Position(8, castle_rank))
         potential_queen_rook = self.board.get_piece(Position(1, castle_rank))
-
         for potential_rook in (potential_king_rook, potential_queen_rook):
             if not isinstance(potential_rook, Rook) or potential_rook.has_moved:
                 if potential_rook is potential_king_rook:
@@ -347,8 +366,25 @@ class GameEngine:
                 else:
                     queen_side_castle = False
 
+        # Check if the needed squares are empty
         king_empty_needed_files = [6, 7]
+        queen_empty_needed_files = [4, 3, 2]
+        for file in king_empty_needed_files + queen_empty_needed_files:
+            if self.board.get_piece(Position(file, castle_rank)):
+                if file in king_empty_needed_files:
+                    king_side_castle = False
+                else:
+                    queen_side_castle = False
+
+        # Check if we are moving through and to safe squares
         king_safe_needed_files = [5, 6, 7]
+        queen_safe_needed_files = [5, 4, 3]
+        for file in king_safe_needed_files + queen_safe_needed_files:
+            if self._is_in_check(self.current_turn, self.board, Position(file, castle_rank)):
+                if file in king_safe_needed_files:
+                    king_side_castle = False
+                else:
+                    queen_side_castle = False
 
         return king_side_castle, queen_side_castle
 
@@ -417,3 +453,9 @@ class GameEngine:
                     break
 
         return False
+
+    def _update_king_pos(self, king: King, new_square: Position):
+        if king.color == 'white':
+            self.white_king_pos = new_square
+        else:
+            self.black_king_pos = new_square
