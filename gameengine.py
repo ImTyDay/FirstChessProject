@@ -24,6 +24,7 @@ class GameEngine:
         self.moves_count = 0
         self.game_winner = None
         self.no_action_turns = 0
+        self.en_passant_target = None
 
         # Define the starting positions of the king, useful for dealing with checks
         self.white_king_pos = Position(5, 1)
@@ -189,11 +190,23 @@ class GameEngine:
                 self._update_king_pos(moving_piece, desired_square)
                 break
 
+            is_pawn_move = isinstance(moving_piece, Pawn) # Useful for many later validations
+
+            # Handle en passant
+            self.en_passant_target = None
+            if is_pawn_move:
+                backwards = -1 if moving_piece.color == 'white' else 1
+                if abs(moving_piece.position.ypos - desired_square.ypos) == 2:
+                    self.en_passant_target = desired_square + (0, backwards)
+                if moving_piece.position.xpos != desired_square.xpos and not self.board.get_piece(desired_square):
+                    self.board.perform_en_passant(moving_piece.position, desired_square)
+                    self.no_action_turns = 0
+                    break
+
             self.board.move_piece(start_pos=moving_piece.position, end_pos=desired_square)
 
             # Define if the current turn is an action turn: a pawn movement or a capture
             # These types of move reset the 50 move limit that makes the game end in draw
-            is_pawn_move = isinstance(moving_piece, Pawn)
             if is_pawn_move or desired_square_occupant:
                 self.no_action_turns = 0
             else:
@@ -286,6 +299,13 @@ class GameEngine:
                 fully_legal_moves.append(Position(7, piece.position.ypos))
             if can_castle_queen_side:
                 fully_legal_moves.append(Position(3, piece.position.ypos))
+
+        # Get en passant moves
+        if isinstance(piece, Pawn):
+            forward = 1 if piece.color == 'white' else -1
+            if self.en_passant_target in [Position(piece.position.xpos + 1, piece.position.ypos + forward),
+                                        Position(piece.position.xpos -1, piece.position.ypos + forward)]:
+                fully_legal_moves.append(self.en_passant_target)
 
         return fully_legal_moves
 

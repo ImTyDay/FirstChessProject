@@ -176,6 +176,23 @@ class Board:
         # Replace in the board
         self.grid.loc[position.ypos, position.xpos] = new_piece
 
+    def perform_en_passant(self, start_pos: Position, end_pos: Position):
+        """
+        Performs the special en passant move.
+        For the board, this is when a pawn lands in a diagonal square,
+        and captures the pawn in the square behind it.
+
+        :param start_pos: The starting position of the pawn that will capture en passant
+        :param end_pos: The landing position of the pawn that is capturing en passant
+        :return:
+        """
+
+        # Move the attacking pawn
+        self.move_piece(start_pos, end_pos)
+
+        # Remove the attacked pawn
+        self.grid.loc[start_pos.ypos, end_pos.xpos] = None
+
     def deep_copy(self):
         """
         Creates a new, completely independent copy of the Board object.

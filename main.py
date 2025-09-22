@@ -119,6 +119,5 @@ from gameengine import GameEngine
 
 # Temporary Main process
 if __name__ == '__main__':
-
     gameengine = GameEngine()
     gameengine.game_run()
